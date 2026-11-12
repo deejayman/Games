@@ -73,9 +73,10 @@
 var board = ["", "", "", "", "", "", "", "", ""];
 var gameOver = false;
 var tttMode = "hard";
-var wins = [, [3,4,5], [6,7,8],
-, [1,4,7], [2,5,8],
-, [2,4,6]
+var wins = [
+  "012", "345", "678",
+  "036", "147", "258",
+  "048", "246"
 ];
 
 function setMode(m) {
@@ -89,7 +90,10 @@ function setMode(m) {
 
 function checkWin(b, p) {
   for (var i = 0; i < wins.length; i++) {
-    if (b[wins[i][0]] === p && b[wins[i][1]] === p && b[wins[i][2]] === p) {
+    var a = parseInt(wins[i].charAt(0), 10);
+    var c = parseInt(wins[i].charAt(1), 10);
+    var d = parseInt(wins[i].charAt(2), 10);
+    if (b[a] === p && b[c] === p && b[d] === p) {
       return true;
     }
   }
@@ -297,9 +301,10 @@ function resetNum() {
   document.getElementById("num-status").innerHTML = "New number picked! Guess 1-50:";
 }
 
-// Start all games
 resetHM();
 buildPad();
 </script>
 </body>
 </html>
+
+
