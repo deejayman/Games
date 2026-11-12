@@ -25,6 +25,7 @@
   <p>
     Mode: 
     <button id="btn-easy" onclick="setMode('easy')">Easy</button>
+    <button id="btn-medium" onclick="setMode('medium')">Medium</button>
     <button id="btn-hard" onclick="setMode('hard')" style="background:#000; color:#fff;">Hard (Unbeatable)</button>
   </p>
   <p id="ttt-status">Tap any square to play as X</p>
@@ -81,10 +82,12 @@ var wins = [
 
 function setMode(m) {
   tttMode = m;
-  document.getElementById("btn-easy").style.background = (m === "easy") ? "#000" : "#fff";
-  document.getElementById("btn-easy").style.color = (m === "easy") ? "#fff" : "#000";
-  document.getElementById("btn-hard").style.background = (m === "hard") ? "#000" : "#fff";
-  document.getElementById("btn-hard").style.color = (m === "hard") ? "#fff" : "#000";
+  var modes = ["easy", "medium", "hard"];
+  for (var i = 0; i < modes.length; i++) {
+    var btn = document.getElementById("btn-" + modes[i]);
+    btn.style.background = (m === modes[i]) ? "#000" : "#fff";
+    btn.style.color = (m === modes[i]) ? "#fff" : "#000";
+  }
   resetTTT();
 }
 
@@ -139,13 +142,15 @@ function minimax(b, depth, isMax) {
 }
 
 function getBotMove() {
-  if (tttMode === "easy") {
+  // Easy = 100% random, Medium = 40% chance of a random move
+  if (tttMode === "easy" || (tttMode === "medium" && Math.random() < 0.4)) {
     var empty = [];
     for (var k = 0; k < 9; k++) {
       if (board[k] === "") empty.push(k);
     }
     return empty[Math.floor(Math.random() * empty.length)];
   }
+  
   var bestVal = -1000;
   var bestMove = -1;
   for (var i = 0; i < 9; i++) {
@@ -281,7 +286,7 @@ var secret = Math.floor(Math.random() * 50) + 1;
 function buildPad() {
   var html = "";
   for (var i = 1; i <= 50; i++) {
-    html += '<button onclick="guess(' + i + ')">' + i + '</button>';
+    html += '<button id="num-' + i + '" onclick="guess(' + i + ')">' + i + '</button>';
     if (i % 10 === 0) html += '<br>';
   }
   document.getElementById("num-pad").innerHTML = html;
@@ -289,24 +294,28 @@ function buildPad() {
 
 function guess(n) {
   var st = document.getElementById("num-status");
+  var btn = document.getElementById("num-" + n);
+  if (btn) btn.disabled = true;
+
   if (n === secret) {
     st.innerHTML = "Correct! It was " + secret + "!";
   } else if (n < secret) {
-    st.innerHTML = n + " is too LOW. Try higher.";
+    st.innerHTML = n + " is too low!";
   } else {
-    st.innerHTML = n + " is too HIGH. Try lower.";
+    st.innerHTML = n + " is too high!";
   }
 }
 
 function resetNum() {
   secret = Math.floor(Math.random() * 50) + 1;
-  document.getElementById("num-status").innerHTML = "New number picked! Guess 1-50:";
+  document.getElementById("num-status").innerHTML = "Pick a number below:";
+  buildPad();
 }
 
+// Initialize Hangman and Number Guess on page load
 resetHM();
 buildPad();
 </script>
 </body>
 </html>
-
 
