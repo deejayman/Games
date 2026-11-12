@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Kindle Gen 8 Games</title>
+<style>
+  body { font-family: sans-serif; text-align: center; background: #fff; color: #000; margin: 10px; }
+  h2 { margin-bottom: 5px; }
+  h3 { margin-top: 5px; }
+  button { font-size: 18px; padding: 10px 13px; margin: 3px; background: #fff; color: #000; border: 2px solid #000; }
+  button:disabled { background: #ddd; color: #777; border-color: #999; }
+  table { margin: 12px auto; border-collapse: collapse; }
+  td button { width: 70px; height: 70px; font-size: 32px; font-weight: bold; margin: 0; }
+  .box { border: 2px solid #000; padding: 12px; margin-top: 16px; }
+  .word-display { font-size: 28px; font-weight: bold; letter-spacing: 6px; margin: 12px 0; }
+</style>
+</head>
+<body>
+
+<h2>Kindle Gen 8 Arcade</h2>
+
+<!-- 1. TIC TAC TOE -->
+<div class="box">
+  <h3>1. Tic-Tac-Toe</h3>
+  <p>
+    Mode: 
+    <button id="btn-easy" onclick="setMode('easy')">Easy</button>
+    <button id="btn-hard" onclick="setMode('hard')" style="background:#000; color:#fff;">Hard (Unbeatable)</button>
+  </p>
+  <p id="ttt-status">Tap any square to play as X</p>
+  <table>
+    <tr>
+      <td><button id="c0" onclick="playTTT(0)"></button></td>
+      <td><button id="c1" onclick="playTTT(1)"></button></td>
+      <td><button id="c2" onclick="playTTT(2)"></button></td>
+    </tr>
+    <tr>
+      <td><button id="c3" onclick="playTTT(3)"></button></td>
+      <td><button id="c4" onclick="playTTT(4)"></button></td>
+      <td><button id="c5" onclick="playTTT(5)"></button></td>
+    </tr>
+    <tr>
+      <td><button id="c6" onclick="playTTT(6)"></button></td>
+      <td><button id="c7" onclick="playTTT(7)"></button></td>
+      <td><button id="c8" onclick="playTTT(8)"></button></td>
+    </tr>
+  </table>
+  <button onclick="resetTTT()">New Game</button>
+</div>
+
+<!-- 2. HANGMAN -->
+<div class="box">
+  <h3>2. Hangman</h3>
+  <p id="hm-lives">Lives left: 6</p>
+  <div id="hm-word" class="word-display">_ _ _ _ _</div>
+  <p id="hm-status">Guess a letter:</p>
+  <div id="hm-keys"></div>
+  <br>
+  <button onclick="resetHM()">New Word</button>
+</div>
+
+<!-- 3. GUESS THE NUMBER -->
+<div class="box">
+  <h3>3. Guess the Number (1-50)</h3>
+  <p id="num-status">Pick a number below:</p>
+  <div id="num-pad"></div>
+  <br>
+  <button onclick="resetNum()">New Number</button>
+</div>
+
+<script>
+// ================= 1. TIC TAC TOE =================
+var board = ["", "", "", "", "", "", "", "", ""];
+var gameOver = false;
+var tttMode = "hard";
+var wins = [, [3,4,5], [6,7,8],
+, [1,4,7], [2,5,8],
+, [2,4,6]
+];
+
+function setMode(m) {
+  tttMode = m;
+  document.getElementById("btn-easy").style.background = (m === "easy") ? "#000" : "#fff";
+  document.getElementById("btn-easy").style.color = (m === "easy") ? "#fff" : "#000";
+  document.getElementById("btn-hard").style.background = (m === "hard") ? "#000" : "#fff";
+  document.getElementById("btn-hard").style.color = (m === "hard") ? "#fff" : "#000";
+  resetTTT();
+}
+
+function checkWin(b, p) {
+  for (var i = 0; i < wins.length; i++) {
+    if (b[wins[i][0]] === p && b[wins[i][1]] === p && b[wins[i][2]] === p) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isFull(b) {
+  for (var i = 0; i < 9; i++) {
+    if (b[i] === "") return false;
+  }
+  return true;
+}
+
+function minimax(b, depth, isMax) {
+  if (checkWin(b, "O")) return 10 - depth;
+  if (checkWin(b, "X")) return depth - 10;
+  if (isFull(b)) return 0;
+
+  var best;
+  if (isMax) {
+    best = -1000;
+    for (var i = 0; i < 9; i++) {
+      if (b[i] === "") {
+        b[i] = "O";
+        var val = minimax(b, depth + 1, false);
+        if (val > best) best = val;
+        b[i] = "";
+      }
+    }
+    return best;
+  } else {
+    best = 1000;
+    for (var j = 0; j < 9; j++) {
+      if (b[j] === "") {
+        b[j] = "X";
+        var val2 = minimax(b, depth + 1, true);
+        if (val2 < best) best = val2;
+        b[j] = "";
+      }
+    }
+    return best;
+  }
+}
+
+function getBotMove() {
+  if (tttMode === "easy") {
+    var empty = [];
+    for (var k = 0; k < 9; k++) {
+      if (board[k] === "") empty.push(k);
+    }
+    return empty[Math.floor(Math.random() * empty.length)];
+  }
+  var bestVal = -1000;
+  var bestMove = -1;
+  for (var i = 0; i < 9; i++) {
+    if (board[i] === "") {
+      board[i] = "O";
+      var moveVal = minimax(board, 0, false);
+      board[i] = "";
+      if (moveVal > bestVal) {
+        bestMove = i;
+        bestVal = moveVal;
+      }
+    }
+  }
+  return bestMove;
+}
+
+function playTTT(idx) {
+  if (gameOver || board[idx] !== "") return;
+  board[idx] = "X";
+  document.getElementById("c" + idx).innerHTML = "X";
+
+  if (checkWin(board, "X")) {
+    document.getElementById("ttt-status").innerHTML = "You Win!";
+    gameOver = true;
+    return;
+  }
+  if (isFull(board)) {
+    document.getElementById("ttt-status").innerHTML = "Draw!";
+    gameOver = true;
+    return;
+  }
+
+  var bot = getBotMove();
+  board[bot] = "O";
+  document.getElementById("c" + bot).innerHTML = "O";
+
+  if (checkWin(board, "O")) {
+    document.getElementById("ttt-status").innerHTML = "Kindle Wins!";
+    gameOver = true;
+  } else if (isFull(board)) {
+    document.getElementById("ttt-status").innerHTML = "Draw!";
+    gameOver = true;
+  }
+}
+
+function resetTTT() {
+  board = ["", "", "", "", "", "", "", "", ""];
+  gameOver = false;
+  document.getElementById("ttt-status").innerHTML = "Tap any square to play as X";
+  for (var i = 0; i < 9; i++) {
+    document.getElementById("c" + i).innerHTML = "";
+  }
+}
+
+// ================= 2. HANGMAN =================
+var words = [
+  "KINDLE", "BOOKWORM", "CHAPTER", "LIBRARY", "MYSTERY",
+  "FANTASY", "PAPERBACK", "READING", "NOVEL", "AUTHOR",
+  "JOURNEY", "DRAGON", "CASTLE", "WIZARD", "LANTERN",
+  "PUZZLE", "GALAXY", "PLANET", "VOYAGE", "COMPASS",
+  "ISLAND", "TREASURE", "SHADOW", "FOREST", "MOUNTAIN"
+];
+var hmWord = "";
+var hmGuessed = [];
+var hmLives = 6;
+var hmOver = false;
+
+function buildKeys() {
+  var alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  var html = "";
+  for (var i = 0; i < alpha.length; i++) {
+    var ch = alpha.charAt(i);
+    html += '<button id="key-' + ch + '" onclick="guessLetter(\'' + ch + '\')">' + ch + '</button>';
+    if (i === 8 || i === 17) html += '<br>';
+  }
+  document.getElementById("hm-keys").innerHTML = html;
+}
+
+function renderHM() {
+  var disp = "";
+  var won = true;
+  for (var i = 0; i < hmWord.length; i++) {
+    var c = hmWord.charAt(i);
+    if (hmGuessed.indexOf(c) !== -1) {
+      disp += c + " ";
+    } else {
+      disp += "_ ";
+      won = false;
+    }
+  }
+  document.getElementById("hm-word").innerHTML = disp;
+  document.getElementById("hm-lives").innerHTML = "Lives left: " + hmLives;
+
+  if (won) {
+    document.getElementById("hm-status").innerHTML = "You Win! Word: " + hmWord;
+    hmOver = true;
+  } else if (hmLives <= 0) {
+    document.getElementById("hm-status").innerHTML = "Game Over! Word was: " + hmWord;
+    hmOver = true;
+  }
+}
+
+function guessLetter(ch) {
+  if (hmOver || hmGuessed.indexOf(ch) !== -1) return;
+  hmGuessed.push(ch);
+  var btn = document.getElementById("key-" + ch);
+  if (btn) btn.disabled = true;
+
+  if (hmWord.indexOf(ch) === -1) {
+    hmLives--;
+    document.getElementById("hm-status").innerHTML = ch + " is not in the word.";
+  } else {
+    document.getElementById("hm-status").innerHTML = "Good guess: " + ch;
+  }
+  renderHM();
+}
+
+function resetHM() {
+  hmWord = words[Math.floor(Math.random() * words.length)];
+  hmGuessed = [];
+  hmLives = 6;
+  hmOver = false;
+  document.getElementById("hm-status").innerHTML = "Guess a letter:";
+  buildKeys();
+  renderHM();
+}
+
+// ================= 3. NUMBER GUESS =================
+var secret = Math.floor(Math.random() * 50) + 1;
+
+function buildPad() {
+  var html = "";
+  for (var i = 1; i <= 50; i++) {
+    html += '<button onclick="guess(' + i + ')">' + i + '</button>';
+    if (i % 10 === 0) html += '<br>';
+  }
+  document.getElementById("num-pad").innerHTML = html;
+}
+
+function guess(n) {
+  var st = document.getElementById("num-status");
+  if (n === secret) {
+    st.innerHTML = "Correct! It was " + secret + "!";
+  } else if (n < secret) {
+    st.innerHTML = n + " is too LOW. Try higher.";
+  } else {
+    st.innerHTML = n + " is too HIGH. Try lower.";
+  }
+}
+
+function resetNum() {
+  secret = Math.floor(Math.random() * 50) + 1;
+  document.getElementById("num-status").innerHTML = "New number picked! Guess 1-50:";
+}
+
+// Start all games
+resetHM();
+buildPad();
+</script>
+</body>
+</html>
