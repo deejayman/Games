@@ -179,8 +179,10 @@ function playTTT(idx) {
   }
 
   var bot = getBotMove();
-  board[bot] = "O";
-  document.getElementById("c" + bot).innerHTML = "O";
+  if (bot !== -1) {
+    board[bot] = "O";
+    document.getElementById("c" + bot).innerHTML = "O";
+  }
 
   if (checkWin(board, "O")) {
     document.getElementById("ttt-status").innerHTML = "Kindle Wins!";
